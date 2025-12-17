@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>OmniScout v1.0 | Advanced Device Intelligence</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230f172a%22 stroke=%22%2338bdf8%22 stroke-width=%225%22/><circle cx=%2250%22 cy=%2250%22 r=%2220%22 fill=%22%2338bdf8%22/><path d=%22M50 5 L50 20 M50 80 L50 95 M5 50 L20 50 M80 50 L95 50%22 stroke=%22%2338bdf8%22 stroke-width=%225%22/></svg>">
+        <style>
+        /* * =========================================
+         * CORE STYLING & VARIABLES
+         * =========================================
+         */
+            :root {
+                --bg-dark: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --accent-cyan: #38bdf8;
+                --accent-green: #4ade80;
+                --accent-red: #f87171;
+                --accent-purple: #c084fc;
+                --border-color: #334155;
+                --glass-bg: rgba(30, 41, 59, 0.7);
+                --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+                --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background-color: var(--bg-dark);
+                color: var(--text-main);
+                font-family: var(--font-sans);
+                padding: 20px;
+                min-height: 100vh;
+                background-image:
+                    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.1) 0px, transparent 50%);
+            }
+
+            /* LAYOUT GRID */
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 24px;
+                max-width: 1600px;
+                margin: 0 auto;
+            }
+
+            /* HEADER */
+            header {
+                max-width: 1600px;
+                margin: 0 auto 30px auto;
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            h1 {
+                font-size: 2rem;
+                font-weight: 800;
+                letter-spacing: -1px;
+                background: linear-gradient(to right, var(--accent-cyan), var(--accent-purple));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .status-badge {
+                background: rgba(56, 189, 248, 0.1);
+                color: var(--accent-cyan);
+                padding: 5px 12px;
+                border-radius: 99px;
+                font-family: var(--font-mono);
+                font-size: 0.8rem;
+                border: 1px solid rgba(56, 189, 248, 0.2);
+            }
+
+            /* CARDS */
+            .card {
+                background: var(--glass-bg);
+                backdrop-filter: blur(12px);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+                border-color: var(--accent-cyan);
+            }
+
+            .card-header {
+                padding: 15px 20px;
+                background: rgba(255, 255, 255, 0.03);
+                border-bottom: 1px solid var(--border-color);
+                font-weight: 600;
+                color: var(--accent-cyan);
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                letter-spacing: 1px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .card-body {
+                padding: 0;
+                flex-grow: 1;
+            }
+
+            /* DATA ROWS */
+            .data-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+                font-size: 0.9rem;
+                align-items: center;
+            }
+
+            .data-row:last-child {
+                border-bottom: none;
+            }
+
+            .key {
+                color: var(--text-muted);
+                font-weight: 500;
+            }
+
+            .value {
+                font-family: var(--font-mono);
+                color: var(--text-main);
+                text-align: right;
+                word-break: break-all;
+                max-width: 60%;
+                font-size: 0.85rem;
+            }
+
+            /* UTILITY COLORS */
+            .val-good {
+                color: var(--accent-green);
+            }
+
+            .val-bad {
+                color: var(--accent-red);
+            }
+
+            .val-warn {
+                color: #fbbf24;
+            }
+
+            .val-info {
+                color: var(--accent-cyan);
+            }
+
+            /* BUTTONS */
+            .action-bar {
+                grid-column: 1 / -1;
+                display: flex;
+                gap: 15px;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+                background: var(--card-bg);
+                padding: 15px;
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+            }
+
+            button {
+                background: var(--bg-dark);
+                border: 1px solid var(--accent-cyan);
+                color: var(--accent-cyan);
+                padding: 10px 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                font-family: var(--font-mono);
+                transition: all 0.2s;
+                text-transform: uppercase;
+                font-size: 0.8rem;
+            }
+
+            button:hover {
+                background: var(--accent-cyan);
+                color: var(--bg-dark);
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            }
+
+            button.danger {
+                border-color: var(--accent-red);
+                color: var(--accent-red);
+            }
+
+            button.danger:hover {
+                background: var(--accent-red);
+                color: white;
+                box-shadow: 0 0 15px rgba(248, 113, 113, 0.4);
+            }
+
+            footer {
+                margin-top: 50px;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.8rem;
+                border-top: 1px solid var(--border-color);
+                padding-top: 20px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <div>
+                <h1>OmniScout v1.0</h1>
+                <p style="color:var(--text-muted); font-size: 0.9rem;">Deep System Reconnaissance & Fingerprinting</p>
+            </div>
+            <div class="status-badge" id="js-status">System Active</div>
+        </header>
+        <div class="dashboard-grid">
+            <div class="action-bar">
+                <button onclick="scout.triggerGeo()">Request GPS Position</button>
+                <button onclick="scout.triggerMedia()">Scan Camera/Mic Models</button>
+                <button class="danger" onclick="scout.triggerWebRTC()">Leak Local IP (WebRTC)</button>
+                <button onclick="scout.triggerClipboard()">Read Clipboard</button>
+                <button onclick="scout.triggerVibrate()">Test Haptics</button>
+            </div>
+            <div class="card">
+                <div class="card-header">Core Identity</div>
+                <div class="card-body" id="sec-identity"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Display & Window</div>
+                <div class="card-body" id="sec-screen"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Hardware & Graphics</div>
+                <div class="card-body" id="sec-hardware"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Network & Connectivity</div>
+                <div class="card-body" id="sec-network"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Power & Battery</div>
+                <div class="card-body" id="sec-battery"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Time & Locale</div>
+                <div class="card-body" id="sec-time"></div>
+            </div>
+            <div class="card" style="grid-column: span 1; border-color: var(--accent-purple);">
+                <div class="card-header" style="color: var(--accent-purple)">Active Recon Results</div>
+                <div class="card-body" id="sec-active">
+                    <div class="data-row"><span class="key">Status</span><span class="value val-warn">Waiting for User Trigger...</span></div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>OmniScout generates a comprehensive client-side profile using passive header analysis and active Web APIs.</p>
+            <p>Running in: <span id="run-mode">Unknown Context</span></p>
+        </footer>
+        <script>
+            /**
+             * =========================================
+             * OMNISCOUT CORE ENGINE
+             * =========================================
+             */
+
+            const scout = (() => {
+
+                /* --- HELPER FUNCTIONS --- */
+                const el = (id) => document.getElementById(id);
+
+                // Returns formatted HTML string for a row
+                const row = (key, val, cssClass = '') => `
+                <div class="data-row">
+                    <span class="key">${key}</span>
+                    <span class="value ${cssClass}">${val}</span>
+                </div>`;
+
+                // Checks if a value is null/undefined
+                const safe = (v) => (v === undefined || v === null || v === '') ? 'N/A' : v;
+                const bool = (v) => v ? '<span class="val-good">Yes</span>' : '<span class="val-bad">No</span>';
+
+                // Renders an array of objects {k, v} into a target ID
+                const render = (targetId, dataArray) => {
+                    const container = el(targetId);
+                    if (!container) return;
+                    container.innerHTML = dataArray.map(item => row(item.k, item.v, item.c)).join('');
+                };
+
+                /* --- MODULE 1: PASSIVE GATHERING (Runs on Load) --- */
+
+                const gatherIdentity = () => {
+                    const nav = navigator;
+                    return [
+                        { k: 'Browser Name', v: nav.appName },
+                        { k: 'Browser Engine', v: nav.product },
+                        { k: 'User Agent', v: nav.userAgent },
+                        { k: 'Platform', v: nav.platform },
+                        { k: 'Language', v: nav.language },
+                        { k: 'Cookies Enabled', v: bool(nav.cookieEnabled) },
+                        { k: 'Do Not Track', v: nav.doNotTrack || 'Unspecified' },
+                        { k: 'Global Privacy Control', v: nav.globalPrivacyControl ? 'Active' : 'Inactive' },
+                        { k: 'Java Enabled', v: bool(nav.javaEnabled()) },
+                        { k: 'PDF Viewer', v: bool(nav.pdfViewerEnabled) }
+                    ];
+                };
+
+                const gatherScreen = () => {
+                    return [
+                        { k: 'Screen Resolution', v: `${screen.width} x ${screen.height}` },
+                        { k: 'Available Size', v: `${screen.availWidth} x ${screen.availHeight}` },
+                        { k: 'Window Inner', v: `${window.innerWidth} x ${window.innerHeight}` },
+                        { k: 'Window Outer', v: `${window.outerWidth} x ${window.outerHeight}` },
+                        { k: 'Pixel Depth', v: `${screen.pixelDepth}-bit` },
+                        { k: 'Color Depth', v: `${screen.colorDepth}-bit` },
+                        { k: 'Device Pixel Ratio', v: window.devicePixelRatio },
+                        { k: 'Orientation', v: (screen.orientation || {}).type || 'Unknown' },
+                        { k: 'Touch Support', v: navigator.maxTouchPoints > 0 ? `${navigator.maxTouchPoints} Points` : 'None' }
+                    ];
+                };
+
+                const gatherHardware = () => {
+                    // WebGL Extraction
+                    let gpuVendor = 'N/A', gpuRenderer = 'N/A';
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                        if (gl) {
+                            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                            if (debugInfo) {
+                                gpuVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                                gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                            }
+                        }
+                    } catch (e) { console.error(e); }
+
+                    return [
+                        { k: 'CPU Cores (Logical)', v: navigator.hardwareConcurrency || 'Hidden' },
+                        { k: 'Device Memory', v: navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : 'Hidden' },
+                        { k: 'GPU Vendor', v: gpuVendor },
+                        { k: 'GPU Model', v: gpuRenderer, c: 'val-info' },
+                        { k: 'Vibration API', v: bool('vibrate' in navigator) },
+                        { k: 'Bluetooth API', v: bool('bluetooth' in navigator) },
+                        { k: 'USB API', v: bool('usb' in navigator) }
+                    ];
+                };
+
+                const gatherNetwork = async () => {
+                    // Basic API
+                    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                    let netData = [];
+
+                    if (conn) {
+                        netData = [
+                            { k: 'Connection Type', v: conn.effectiveType || 'Unknown' },
+                            { k: 'Downlink Speed', v: `${conn.downlink} Mbps` },
+                            { k: 'RTT (Latency)', v: `${conn.rtt} ms` },
+                            { k: 'Save Data Mode', v: bool(conn.saveData) }
+                        ];
+                    } else {
+                        netData.push({ k: 'Network API', v: 'Not Supported' });
+                    }
+
+                    // Public IP (Async)
+                    try {
+                        const req = await fetch('https://api.ipify.org?format=json');
+                        const json = await req.json();
+                        netData.unshift({ k: 'Public IP', v: json.ip, c: 'val-info' });
+                    } catch (e) {
+                        netData.unshift({ k: 'Public IP', v: 'Blocked/Offline', c: 'val-bad' });
+                    }
+
+                    render('sec-network', netData);
+                };
+
+                const gatherTime = () => {
+                    const d = new Date();
+                    const opts = Intl.DateTimeFormat().resolvedOptions();
+                    return [
+                        { k: 'Timezone', v: opts.timeZone },
+                        { k: 'Locale', v: opts.locale },
+                        { k: 'Calendar', v: opts.calendar },
+                        { k: 'System Time', v: d.toLocaleTimeString() },
+                        { k: 'Date', v: d.toLocaleDateString() },
+                        { k: 'Time Since Epoch', v: Date.now() }
+                    ];
+                };
+
+                const gatherBattery = async () => {
+                    if ('getBattery' in navigator) {
+                        try {
+                            const bat = await navigator.getBattery();
+
+                            const updateBat = () => {
+                                const data = [
+                                    { k: 'Battery Level', v: `${Math.round(bat.level * 100)}%`, c: bat.level < 0.2 ? 'val-bad' : 'val-good' },
+                                    { k: 'Charging Status', v: bat.charging ? 'Charging' : 'Discharging' },
+                                    { k: 'Time to Charge', v: bat.chargingTime === Infinity ? 'Unknown' : `${bat.chargingTime}s` },
+                                    { k: 'Time to Empty', v: bat.dischargingTime === Infinity ? 'Unknown' : `${bat.dischargingTime}s` }
+                                ];
+                                render('sec-battery', data);
+                            };
+
+                            bat.addEventListener('levelchange', updateBat);
+                            bat.addEventListener('chargingchange', updateBat);
+                            updateBat(); // Initial call
+                        } catch (e) { render('sec-battery', [{ k: 'Battery', v: 'Protected' }]); }
+                    } else {
+                        render('sec-battery', [{ k: 'Battery API', v: 'Not Supported' }]);
+                    }
+                };
+
+                /* --- MODULE 2: ACTIVE TRIGGERS (User Interaction) --- */
+
+                // Shared Active Data Storage
+                let activeData = [];
+
+                const updateActive = (key, val, css = '') => {
+                    // Check if key exists, update it, otherwise push
+                    const idx = activeData.findIndex(i => i.k === key);
+                    if (idx > -1) {
+                        activeData[idx] = { k: key, v: val, c: css };
+                    } else {
+                        activeData.push({ k: key, v: val, c: css });
+                    }
+                    render('sec-active', activeData);
+                };
+
+                // 1. Geolocation
+                const triggerGeo = () => {
+                    updateActive('Geolocation', 'Requesting...', 'val-warn');
+                    if (!navigator.geolocation) return updateActive('Geolocation', 'Not Supported', 'val-bad');
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            updateActive('Latitude', pos.coords.latitude.toFixed(6));
+                            updateActive('Longitude', pos.coords.longitude.toFixed(6));
+                            updateActive('Accuracy', `±${pos.coords.accuracy}m`);
+                            updateActive('Speed', pos.coords.speed || 0 + ' m/s');
+                            updateActive('Geolocation', 'Access Granted', 'val-good');
+                        },
+                        (err) => {
+                            updateActive('Geolocation', `Denied: ${err.message}`, 'val-bad');
+                        },
+                        { enableHighAccuracy: true }
+                    );
+                };
+
+                // 2. Media Devices
+                const triggerMedia = async () => {
+                    updateActive('Media Scan', 'Requesting...', 'val-warn');
+                    try {
+                        // Request stream to unlock labels
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                        stream.getTracks().forEach(t => t.stop()); // Stop immediately
+
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        let count = 0;
+                        devices.forEach(d => {
+                            updateActive(`${d.kind} [${count++}]`, d.label || 'Unknown', 'val-info');
+                        });
+                        updateActive('Media Scan', 'Complete', 'val-good');
+                    } catch (e) {
+                        updateActive('Media Scan', 'Denied/Error', 'val-bad');
+                    }
+                };
+
+                // 3. WebRTC Local IP
+                const triggerWebRTC = () => {
+                    updateActive('Local IP', 'Scanning ICE candidates...', 'val-warn');
+                    const pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel('');
+                    pc.createOffer().then(o => pc.setLocalDescription(o));
+
+                    pc.onicecandidate = (ice) => {
+                        if (ice && ice.candidate && ice.candidate.candidate) {
+                            const res = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate);
+                            if (res) {
+                                updateActive('Local IP (LAN)', res[1], 'val-bad'); // Red because it's a leak
+                                pc.close();
+                            }
+                        }
+                    };
+                    // Fallback timeout
+                    setTimeout(() => {
+                        if (!activeData.find(d => d.k === 'Local IP (LAN)')) {
+                            updateActive('Local IP', 'Hidden by mDNS/Browser', 'val-good');
+                        }
+                    }, 2000);
+                };
+
+                // 4. Clipboard
+                const triggerClipboard = async () => {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        updateActive('Clipboard Content', text ? text.substring(0, 30) + '...' : 'Empty', 'val-info');
+                    } catch (e) {
+                        updateActive('Clipboard', 'Permission Denied', 'val-bad');
+                    }
+                };
+
+                // 5. Vibration
+                const triggerVibrate = () => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate([200, 100, 200]);
+                        updateActive('Haptics', 'Vibrating...', 'val-good');
+                        setTimeout(() => updateActive('Haptics', 'Idle', ''), 1000);
+                    } else {
+                        updateActive('Haptics', 'Not Supported', 'val-bad');
+                    }
+                };
+
+                // 6. Sensors (Gyro) - Requires HTTPS/Localhost
+                const initSensors = () => {
+                    if (window.DeviceOrientationEvent) {
+                        window.addEventListener('deviceorientation', (e) => {
+                            // Only update if we have meaningful data
+                            if (e.alpha || e.beta) {
+                                if (!activeData.find(x => x.k === 'Sensor Status')) {
+                                    updateActive('Sensor Status', 'Receiving Data', 'val-good');
+                                }
+                            }
+                        });
+                    }
+                };
+
+
+                /* --- INITIALIZATION --- */
+                const init = () => {
+                    // Render Passive
+                    render('sec-identity', gatherIdentity());
+                    render('sec-screen', gatherScreen());
+                    render('sec-hardware', gatherHardware());
+                    render('sec-time', gatherTime());
+
+                    // Async Passive
+                    gatherNetwork();
+                    gatherBattery();
+                    initSensors();
+
+                    // Environment Check
+                    el('run-mode').innerText = window.isSecureContext ? 'Secure Context (HTTPS)' : 'Insecure Context (Some APIs Restricted)';
+                };
+
+                return {
+                    init,
+                    triggerGeo,
+                    triggerMedia,
+                    triggerWebRTC,
+                    triggerClipboard,
+                    triggerVibrate
+                };
+
+            })();
+
+            // Boot
+            document.addEventListener('DOMContentLoaded', scout.init);
+        </script>
+    </body>
+
+</html>
