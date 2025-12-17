@@ -66,9 +66,9 @@ This project is built with a "Zero-Dependency" philosophy to ensure maximum spee
 Since OmniScout relies purely on client-side technologies, it does not require a backend server for the core logic (except for the Public IP fetch).
 
 1.  **Clone the repository:**
-    [code-block]bash
+    ```bash
     git clone https://github.com/rubensbraz/OmniScout.git
-    [code-block]
+    ```
 
 2.  **Open the file:**
     Simply navigate to the folder and open `index.html` in any modern web browser.
